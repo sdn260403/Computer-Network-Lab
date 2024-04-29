@@ -1,97 +1,86 @@
-#include "header.h"
+#include "h2.h"
 
-void main(){
-	
-	int ss = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	struct sockaddr_in saddr, caddr;
-	saddr.sin_family=AF_INET;
-	saddr.sin_addr.s_addr = inet_addr(ip);
-	saddr.sin_port = htons(sport);
-
-	bind(ss, (struct sockaddr *)&saddr, sizeof(saddr));
-	
-	printf("Server Starting...\n\n");
-
-	while(1){
-	
-		char buff[max];
-
-		int length = sizeof(caddr);
-		recvfrom(ss, buff, max, 0, (struct sockaddr *)&caddr, &length);
-
-		printf("Message from client: %s\n", buff);
-		
-		if(!strcmp("exit",buff))
+int main()
+{
+        int sid,cid,l,n;
+        
+        struct sockaddr_in saddr,caddr;
+        sid=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+        
+        saddr.sin_family=AF_INET;
+        saddr.sin_addr.s_addr=inet_addr(ip);
+        saddr.sin_port=htons(sport);
+        
+        bind(sid,(struct sockaddr *)&saddr,sizeof(saddr));
+        
+        listen(sid,5);
+        
+        l=sizeof(caddr);
+        printf("Server established...\n\n");
+        while(1)
+        {
+                char msg[32],temp[32];
+                
+                cid=accept(sid,(struct sockaddr *)&caddr,&l);
+                if(cid)
+                        printf("Connection established...\n\n");
+                        
+                n=read(cid,(void*)msg,32);  
+                msg[n]=0;
+                
+                if(!strcmp(msg, "EXIT") || !strcmp(msg, "exit"))
 		{
-		        close(ss);
-		        exit(0);
-		        
-		}
-
-		// here lets manipulate the data
-
-		//first find the parity bits
-
-		int m = strlen(buff); //size of message
-		
-		int p = 0;
-		
-		while(pow(2, p)<p+m+1){
-			p++; // find out parity bits
+			printf("Signing Off...\n");
+			break;
 		}
 		
-		int len = m+p; // the total length of the new message
-		char finalMsg[len];
-		int i;
-		int buff_c = 0;
-
-		for(i=0; i<len; i++){
-			if(ceil(log2(len-i)) == floor(log2(len-i))){
-				// this means len - i is a power of 2
-				finalMsg[i] = 'p';
-			}
-			else{
-				finalMsg[i] = buff[buff_c++];
-			}
-		}
-		
-		finalMsg[len] = '\0';
-
-		int bitsCalc = 0;
-		while(bitsCalc<p){
-			
-			int posi = pow(2, bitsCalc);
-			int bitPosi = posi;
-			int ones = 0;
-
-			while(bitPosi<=len){
-				
-				int j = 0;
-				while(j<posi){
-					
-					if(finalMsg[len-(bitPosi+j)]=='1') 
-						ones++;
-					j++;
-				}
-
-				bitPosi = bitPosi + 2*posi;
-
-			}
-
-			if((ones%2)==0){
-				finalMsg[len-posi] = '0';
-			}
-			else{
-				finalMsg[len-posi] = '1';
-			}
-
-			bitsCalc++;
-
-		}
-
-		sendto(ss, finalMsg, max, 0, (struct sockaddr *)&caddr, length);
-		
-	}
-	
+                printf("Data Rec'vd\n");    
+                //# parity bits
+                int m=strlen(msg),p=0,b_c=0,tot;
+                while(pow(2,p)<m+p+1)
+                        p++;
+                //printf("%d\n",p);
+                
+                // parity bits insertion
+                tot=m+p;
+                int ti=0;
+                for(int i=0;i<tot;i++)
+                {
+                        if(ceil(log2(tot-i)) == floor(log2(tot-i)))
+                        {
+                                int parity = 0;
+                                for (int j = 1; j <= m-1; j++) 
+                                        if ((j >> ti) & 1) 
+                                                parity ^=msg[j-1];
+                                printf("%d %d\n",tot-i,parity);          
+                                temp[i] = (parity==0 || parity==48)?'0':'1';
+                                ti++;
+                        }
+                                
+                        else
+                                temp[i]=msg[b_c++];
+                }
+                temp[tot]=0;
+                // parity bits updation
+                printf("%s\n",temp);
+                /*for (int i = 0; i < p; i++) 
+                {
+                        int parity = 0;
+                        for (int j = 1; j <= m-1; j++) 
+                        {
+                                if ((j >> i) & 1) 
+                                        parity ^= (int)msg[j-1];
+            
+                        }
+                        printf("%d %d\n",tot-(1<<i),parity);
+                        int d=tot-(1 << i)-1;
+                        temp[d] = (parity==0)?'0':'1';
+                }*/
+                
+                write(cid,(void*)temp,sizeof(msg));
+                close(cid);
+        }
+        
+        close(sid);
+        return 0;
 }
