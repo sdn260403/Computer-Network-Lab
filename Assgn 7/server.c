@@ -3,6 +3,7 @@
 int main()
 {
         int sid,cid,l,n;
+        char msg[32],temp[32];
         
         struct sockaddr_in saddr,caddr;
         sid=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
@@ -19,7 +20,9 @@ int main()
         printf("Server established...\n\n");
         while(1)
         {
-                char msg[32],temp[32];
+                
+                memset(msg, 0, sizeof(msg));
+                memset(temp, 0, sizeof(temp));
                 
                 cid=accept(sid,(struct sockaddr *)&caddr,&l);
                 if(cid)
@@ -36,46 +39,50 @@ int main()
 		
                 printf("Data Rec'vd\n");    
                 //# parity bits
-                int m=strlen(msg),p=0,b_c=0,tot;
+                int m=strlen(msg),p=1,b_c=0,tot,shift=0,count=0;
                 while(pow(2,p)<m+p+1)
                         p++;
-                //printf("%d\n",p);
+                printf("%d Parity bits\n",p);
                 
                 // parity bits insertion
                 tot=m+p;
-                int ti=0;
+                
+                 for (int i = 0; i < m / 2; i++)
+                 {
+                        char t = msg[i];
+                        msg[i] = msg[m - 1 - i];
+                        msg[m - 1 - i] = t;
+                 }           
+
+               
                 for(int i=0;i<tot;i++)
                 {
-                        if(ceil(log2(tot-i)) == floor(log2(tot-i)))
-                        {
-                                int parity = 0;
-                                for (int j = 1; j <= m-1; j++) 
-                                        if ((j >> ti) & 1) 
-                                                parity ^=msg[j-1];
-                                printf("%d %d\n",tot-i,parity);          
-                                temp[i] = (parity==0 || parity==48)?'0':'1';
-                                ti++;
-                        }
-                                
+                        if(!((i + 1) & i))
+                                temp[i]='r';
                         else
                                 temp[i]=msg[b_c++];
                 }
                 temp[tot]=0;
-                // parity bits updation
                 printf("%s\n",temp);
-                /*for (int i = 0; i < p; i++) 
+                for(int i=0;i<p;i++)
                 {
-                        int parity = 0;
-                        for (int j = 1; j <= m-1; j++) 
-                        {
-                                if ((j >> i) & 1) 
-                                        parity ^= (int)msg[j-1];
-            
-                        }
-                        printf("%d %d\n",tot-(1<<i),parity);
-                        int d=tot-(1 << i)-1;
-                        temp[d] = (parity==0)?'0':'1';
-                }*/
+                        shift=1<<i;
+                        count=0;
+                        for (int j = 1; j <=tot; j++) 
+                                if (j & shift )
+                                        if(temp[j-1]=='1')
+                                                count++;
+                        printf("Count: %d\n",count);          
+                        temp[shift - 1] = (count%2==0)?'0' :'1';                      
+                }
+                for (int i = 0; i < tot / 2; i++)
+                 {
+                        char t = temp[i];
+                        temp[i] = temp[tot - 1 - i];
+                        temp[tot - 1 - i] = t;
+                 } 
+                printf("%s\n",temp);
+                
                 
                 write(cid,(void*)temp,sizeof(msg));
                 close(cid);
