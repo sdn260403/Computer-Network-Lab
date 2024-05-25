@@ -3,10 +3,10 @@
 int main()
 {
         int sid,cid,l,n;
-        char msg[32],temp[32];
+        char msg[MAX],temp[MAX];
         
-        struct sockaddr_in saddr,caddr;
-        sid=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+        struct sockaddr_in saddr;
+        sid=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
         
         saddr.sin_family=AF_INET;
         saddr.sin_addr.s_addr=inet_addr(ip);
@@ -14,9 +14,8 @@ int main()
         
         bind(sid,(struct sockaddr *)&saddr,sizeof(saddr));
         
-        listen(sid,5);
         
-        l=sizeof(caddr);
+        l=sizeof(saddr);
         printf("Server established...\n\n");
         while(1)
         {
@@ -24,11 +23,11 @@ int main()
                 memset(msg, 0, sizeof(msg));
                 memset(temp, 0, sizeof(temp));
                 
-                cid=accept(sid,(struct sockaddr *)&caddr,&l);
+               
                 if(cid)
                         printf("Connection established...\n\n");
                         
-                n=read(cid,(void*)msg,32);  
+                n=recvfrom(sid,(void*)msg,MAX,0,(struct sockaddr *)&saddr,&l);  
                 msg[n]=0;
                 
                 if(!strcmp(msg, "EXIT") || !strcmp(msg, "exit"))
@@ -84,8 +83,8 @@ int main()
                 printf("%s\n",temp);
                 
                 
-                write(cid,(void*)temp,sizeof(msg));
-                close(cid);
+                sendto(sid,(void*)temp,sizeof(msg),0,(struct sockaddr *)&saddr,l);
+                //close(cid);
         }
         
         close(sid);
