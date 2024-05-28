@@ -36,30 +36,26 @@ void main(){
 		printf("Enter message to be sent: ");
 		fgets(data.msg, sizeof(data.msg), stdin);
 		data.msg[strlen(data.msg)-1]= '\0';
-		//printf("Message read: %s\n\n", data.msg);	
+		//printf("Message len: %lu", strlen(data.msg));	
 		
 		
 		//checking exit condition
 		if(strcmp(data.msg, "EXIT")==0 || strcmp(data.msg, "exit")==0)	//exit condition
 			break;
 			
-		//getting divisor(polynomial) as input
-		int n;
-		printf("Enter max power of x: ");
-		scanf("%d", &n);
-		getchar();	//to fix scanf leaving a '\n'
 		
-		printf("Enter 1/0 (without space) for presence/absence of x^n starting with x^%d, x^%d, ... x^0: ", n, n-1);
+		
+		printf("Enter divisor:  ");
 		fgets(data.divisor, sizeof(data.divisor), stdin);
 		data.divisor[strlen(data.divisor)-1]= '\0';
-		//printf("Message read: %s\n\n", data.divisor);
+		printf("Message read: %s\n\n", data.divisor);
 		
 		//adding additional bits to msg
 		char ch= '0';
-		for(int i=0; i<n; i++)
+		for(int i=0; i<strlen(data.divisor)-1; i++)
 			strncat(data.msg, &ch, 1);
 			
-		//printf("msg sent: %s\n", data.msg);
+		printf("msg sent: %s\n", data.msg);
 		
 		//sending data to server
 		write(cs, (void *)&data, sizeof(data));
@@ -70,7 +66,7 @@ void main(){
 		//reading
 		read(cs, (void *)&data, sizeof(data));
 		//printf("Read from client\n");
-		printf("Message received: %s\n\n", data.msg);	
+		printf("Message received: %s\n\n",data.msg);	
 				
 	}
 	
