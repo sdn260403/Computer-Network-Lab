@@ -56,29 +56,27 @@ void main(){
 		    
 		char temp_d[20]= "";
 		strncat(temp_d, data.msg, divisor_len);
-		    
-		    
+		
+		char r[20]= "";
 		    
 	    	while(msg_c<=strlen(data.msg)){
 			
-			char r[20]= "";
-			
+			memset(r, 0, sizeof(r));
+			//printf("temp_d: %s\n", temp_d);
 			//doing xor
+			
 			for(int i=0; i<divisor_len; i++){
-			    if(temp_d[i]==data.divisor[i])
-				r[i]= '0';
-			    else
-				r[i]= '1';
+			        if(temp_d[i]==data.divisor[i])
+				        r[i]= '0';
+			        else
+				        r[i]= '1';
 			}
-			
+			//printf("r: %s\n", r);
 			//removing starting zeroes from remainder and updating temp_d
-			int pos;
-			for(pos=0; pos<divisor_len; pos++){
-			    if(r[pos]=='1')
-				break;
-			}
+			int pos=0;
+			while(r[pos]=='0')
+			        pos++;		
 
-			
 			int start=0;
 			while(pos<divisor_len){
 			    temp_d[start++]= r[pos++];
@@ -87,23 +85,25 @@ void main(){
 			
 			
 			//carrying bits from og msg if needed
-			while(start<divisor_len){
+			while(start<divisor_len)
 			    temp_d[start++]= data.msg[msg_c++];
-			    //printf("msg_c: %d", msg_c);
-			}
+			    
+		        //printf("new temp: %s\n", temp_d);
+			
 		    }
 		    
-			
+                    //printf("r: %s\n", r);
 		    //updating the msg for sending back to client
-		    int i=strlen(data.msg)- strlen(temp_d);
-		    int j=0;
-		    for(;i<strlen(data.msg); i++, j++){
-			if(data.msg[i]==temp_d[j])
-				data.msg[i]= '0';
-			    else
-				data.msg[i]= '1';
+		    int i=strlen(data.msg)-divisor_len+1;
+		    int j=1;
+		    
+		    printf("i: %d\n", i);
+		    for(;j<divisor_len; i++, j++){
+			data.msg[i]=r[j];
+				
 		    }
-		    //printf("Final message is: %s\n", data.msg);
+		    data.msg[i]='\0';
+		    printf("Final message is: %s\n", data.msg);
 		    
 		    //sending data back to client
 		    write(ts, (void *)&data, sizeof(data));
