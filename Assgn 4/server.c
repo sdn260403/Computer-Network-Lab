@@ -78,31 +78,29 @@ void main(){
 			        pos++;		
 
 			int start=0;
-			while(pos<divisor_len){
+			while(pos<divisor_len)
 			    temp_d[start++]= r[pos++];
-			}
-			
 			
 			
 			//carrying bits from og msg if needed
 			while(start<divisor_len)
 			    temp_d[start++]= data.msg[msg_c++];
 			    
-		        //printf("new temp: %s\n", temp_d);
+		        //printf("new temp,msg_count: %s %d\n", temp_d,msg_c);
 			
 		    }
 		    
                     //printf("r: %s\n", r);
 		    //updating the msg for sending back to client
-		    int i=strlen(data.msg)-divisor_len+1;
-		    int j=1;
+		    int i=strlen(data.msg)-1;
+		    int j=strlen(temp_d)-1;
 		    
-		    printf("i: %d\n", i);
-		    for(;j<divisor_len; i++, j++){
-			data.msg[i]=r[j];
+		    //printf("i: %d\n", i);
+		    for(;j>=0; i--, j--){
+			data.msg[i]=temp_d[j];
 				
 		    }
-		    data.msg[i]='\0';
+		    //data.msg[i]='\0';
 		    printf("Final message is: %s\n", data.msg);
 		    
 		    //sending data back to client
